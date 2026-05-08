@@ -180,6 +180,33 @@ st.markdown("""
 
     div[data-testid="stDataFrame"] { border-radius: 8px; overflow: hidden; }
 
+    /* Ocultar barra de herramientas de Streamlit */
+    #MainMenu { visibility: hidden; }
+    header { visibility: hidden; }
+    footer { visibility: hidden; }
+    .stDeployButton { display: none; }
+    [data-testid="stToolbar"] { display: none; }
+    [data-testid="stDecoration"] { display: none; }
+    [data-testid="stStatusWidget"] { display: none; }
+
+    /* Ajustar el area de carga de archivos */
+    [data-testid="stFileUploader"] {
+        background: rgba(31, 56, 100, 0.4);
+        border: 2px dashed rgba(46, 117, 182, 0.6);
+        border-radius: 10px;
+        padding: 8px;
+    }
+    [data-testid="stFileUploader"] label { display: none; }
+    [data-testid="stFileUploaderDropzone"] {
+        background: transparent !important;
+        border: none !important;
+        padding: 4px !important;
+    }
+    [data-testid="stFileUploaderDropzoneInstructions"] {
+        color: #8BA3C7 !important;
+        font-size: 0.8rem !important;
+    }
+
     .stSelectbox label, .stMultiSelect label {
         color: #8BA3C7 !important;
         font-size: 0.8rem !important;
