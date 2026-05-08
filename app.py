@@ -196,82 +196,57 @@ st.markdown(f"""
 
 st.markdown("<div class='content-pad'>", unsafe_allow_html=True)
 
-# Hide native uploader and show custom button
+# Upload con overlay invisible encima del boton custom
 st.markdown("""
 <style>
-    /* Ocultar TODO el componente nativo de uploader */
-    [data-testid="stFileUploader"] {
-        position: absolute !important;
-        opacity: 0 !important;
-        width: 1px !important;
-        height: 1px !important;
-        overflow: hidden !important;
-        pointer-events: none !important;
+    .upload-wrapper {
+        position: relative;
+        width: 100%;
+        margin-bottom: 8px;
     }
-    /* Boton custom de upload */
-    .upload-btn-custom {
-        display: block;
+    .upload-visual {
         width: 100%;
         padding: 40px 20px;
         background: #1E1E1E;
         border: 2px dashed #C8102E;
         border-radius: 14px;
         text-align: center;
-        cursor: pointer;
-        transition: all 0.2s;
-        margin-bottom: 8px;
+        pointer-events: none;
     }
-    .upload-btn-custom:hover {
-        background: #2A2A2A;
-        border-color: #FF3050;
+    .upload-visual .upload-arrow { font-size: 3rem; display: block; margin-bottom: 10px; }
+    .upload-visual .upload-main { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: #FFFFFF; text-transform: uppercase; letter-spacing: 2px; display: block; margin-bottom: 6px; }
+    .upload-visual .upload-sec { font-family: 'Inter', sans-serif; font-size: 0.82rem; color: #C8102E; font-weight: 600; display: block; margin-bottom: 4px; }
+    .upload-visual .upload-hint-text { font-family: 'Inter', sans-serif; font-size: 0.68rem; color: #444; display: block; }
+    /* El uploader nativo queda encima, invisible, funcional */
+    [data-testid="stFileUploader"] {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        opacity: 0 !important;
+        cursor: pointer !important;
+        z-index: 10 !important;
     }
-    .upload-btn-custom .upload-arrow {
-        font-size: 3rem;
-        display: block;
-        margin-bottom: 10px;
-    }
-    .upload-btn-custom .upload-main {
-        font-family: 'Barlow Condensed', sans-serif;
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: #FFFFFF;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        display: block;
-        margin-bottom: 6px;
-    }
-    .upload-btn-custom .upload-sec {
-        font-family: 'Inter', sans-serif;
-        font-size: 0.82rem;
-        color: #C8102E;
-        font-weight: 600;
-        display: block;
-        margin-bottom: 4px;
-    }
-    .upload-btn-custom .upload-hint-text {
-        font-family: 'Inter', sans-serif;
-        font-size: 0.68rem;
-        color: #444;
-        display: block;
+    [data-testid="stFileUploaderDropzone"] {
+        width: 100% !important;
+        height: 100% !important;
+        cursor: pointer !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
 col_iz, col_centro, col_der = st.columns([1, 2, 1])
 with col_centro:
-    # Native uploader (hidden but functional)
-    archivo = st.file_uploader("Subir CSV", type=["csv"], label_visibility="hidden")
-    
-    # Custom visual button (shown on top via JS click)
-    if archivo is None:
-        st.markdown("""
-        <label for="fileInput" class="upload-btn-custom" onclick="document.querySelector('[data-testid=stFileUploaderDropzone]').click()">
-            <span class="upload-arrow">⬆️</span>
-            <span class="upload-main">Subir reporte de CONSUMAN</span>
-            <span class="upload-sec">Adjuntá el archivo CSV</span>
-            <span class="upload-hint-text">Consultar → Planes de Mantenimiento por Activo → Exportar → Guardar como CSV</span>
-        </label>
-        """, unsafe_allow_html=True)
+    st.markdown('''
+    <div class="upload-visual">
+        <span class="upload-arrow">⬆️</span>
+        <span class="upload-main">Subir reporte de CONSUMAN</span>
+        <span class="upload-sec">Adjuntá el archivo CSV</span>
+        <span class="upload-hint-text">Consultar → Planes de Mantenimiento por Activo → Exportar → Guardar como CSV</span>
+    </div>
+    ''', unsafe_allow_html=True)
+    archivo = st.file_uploader("", type=["csv"], label_visibility="collapsed")
 
 if archivo is None:
     st.markdown("<br>", unsafe_allow_html=True)
