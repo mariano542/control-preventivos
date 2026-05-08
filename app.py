@@ -2,12 +2,14 @@ import streamlit as st
 import pandas as pd
 from datetime import date
 from io import BytesIO
+import base64
+import os
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
 st.set_page_config(
-    page_title="Control Preventivos",
+    page_title="APESA · Control Preventivos",
     page_icon="🔧",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -15,131 +17,198 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
 
     #MainMenu, header, footer, [data-testid="stToolbar"],
     [data-testid="stDecoration"], [data-testid="stStatusWidget"],
     .stDeployButton, [data-testid="collapsedControl"] { display: none !important; visibility: hidden !important; }
 
-    .stApp { background: linear-gradient(135deg, #0A1628 0%, #1a2744 100%); }
-    .main .block-container { padding-top: 2rem; max-width: 1400px; }
+    /* FONDO BLANCO */
+    .stApp { background: #FFFFFF !important; }
+    .main .block-container { background: #FFFFFF !important; padding-top: 0; max-width: 1400px; padding-left: 2rem; padding-right: 2rem; }
+    section[data-testid="stMain"] { background: #FFFFFF !important; }
 
-    h1, h2, h3 { font-family: 'Rajdhani', sans-serif !important; }
-    p, div, span, label { font-family: 'Inter', sans-serif !important; }
+    h1,h2,h3 { font-family: 'Barlow Condensed', sans-serif !important; }
+    p,div,span,label { font-family: 'Inter', sans-serif !important; }
 
-    .titulo-principal {
-        font-family: 'Rajdhani', sans-serif;
-        font-size: 2.8rem;
-        font-weight: 700;
+    /* HEADER */
+    .apesa-header {
+        background: #1A1A1A;
+        border-bottom: 4px solid #C8102E;
+        padding: 16px 24px;
+        margin: 0 -2rem 24px -2rem;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    .apesa-header-titulo {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 1.8rem;
+        font-weight: 800;
         color: #FFFFFF;
-        letter-spacing: 2px;
+        letter-spacing: 3px;
         text-transform: uppercase;
         line-height: 1;
     }
-    .subtitulo {
+    .apesa-header-sub {
         font-family: 'Inter', sans-serif;
-        font-size: 0.9rem;
-        color: #8BA3C7;
-        margin-top: 4px;
-        letter-spacing: 1px;
-    }
-    .metric-card {
-        border-radius: 12px;
-        padding: 20px;
-        text-align: center;
-        border: 1px solid rgba(46,117,182,0.3);
-        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    }
-    .metric-numero { font-family: 'Rajdhani', sans-serif; font-size: 2.5rem; font-weight: 700; color: #FFF; line-height: 1; }
-    .metric-label { font-family: 'Inter', sans-serif; font-size: 0.72rem; color: #8BA3C7; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
-    .metric-rojo { background: linear-gradient(135deg, #5C1A1A 0%, #C00000 100%); }
-    .metric-amarillo { background: linear-gradient(135deg, #5C4A00 0%, #B8860B 100%); }
-    .metric-verde { background: linear-gradient(135deg, #1A3A1A 0%, #2E7D32 100%); }
-    .metric-azul { background: linear-gradient(135deg, #1F3864 0%, #2E75B6 100%); }
-
-    .upload-card {
-        background: linear-gradient(135deg, #1F3864 0%, #162a4e 100%);
-        border: 2px dashed rgba(46,117,182,0.6);
-        border-radius: 16px;
-        padding: 32px 24px;
-        text-align: center;
-        margin-bottom: 24px;
-    }
-    .upload-titulo {
-        font-family: 'Rajdhani', sans-serif;
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: #FFFFFF;
+        font-size: 0.68rem;
+        color: #999;
+        letter-spacing: 2px;
         text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 6px;
+        margin-top: 3px;
     }
-    .upload-subtitulo {
-        font-family: 'Inter', sans-serif;
-        font-size: 0.8rem;
-        color: #8BA3C7;
-        margin-bottom: 16px;
+    .apesa-header-divider {
+        width: 3px;
+        height: 44px;
+        background: #C8102E;
+        border-radius: 2px;
+        flex-shrink: 0;
     }
 
-    .seccion-titulo {
-        font-family: 'Rajdhani', sans-serif;
-        font-size: 1.3rem;
-        font-weight: 600;
-        color: #FFF;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        border-left: 4px solid #E25C00;
-        padding-left: 12px;
-        margin: 20px 0 10px 0;
-    }
-    .info-box {
-        background: rgba(31,56,100,0.5);
-        border: 1px solid rgba(46,117,182,0.3);
-        border-radius: 8px;
-        padding: 12px 16px;
-        color: #8BA3C7;
-        font-size: 0.82rem;
-    }
+    /* CONFIG BAR */
     .config-bar {
-        background: rgba(31,56,100,0.4);
-        border-radius: 10px;
+        background: #F5F5F5;
+        border-radius: 8px;
         padding: 10px 20px;
         display: flex;
-        gap: 24px;
+        gap: 28px;
         align-items: center;
         margin-bottom: 20px;
+        border-left: 4px solid #C8102E;
+        border: 1px solid #E0E0E0;
+        border-left: 4px solid #C8102E;
     }
-    .stButton > button {
-        background: linear-gradient(135deg, #E25C00, #FF7B2C) !important;
+
+    /* METRICS */
+    .metric-card {
+        border-radius: 8px;
+        padding: 18px 12px;
+        text-align: center;
+        border-top: 4px solid transparent;
+    }
+    .metric-numero { font-family: 'Barlow Condensed', sans-serif; font-size: 2.8rem; font-weight: 800; line-height: 1; }
+    .metric-label { font-family: 'Inter', sans-serif; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+    .metric-total { background: #1A1A1A; border-color: #333; }
+    .metric-total .metric-numero { color: #FFFFFF; }
+    .metric-total .metric-label { color: #999; }
+    .metric-rojo { background: #FFF0F2; border-color: #C8102E; }
+    .metric-rojo .metric-numero { color: #C8102E; }
+    .metric-rojo .metric-label { color: #e05060; }
+    .metric-naranja { background: #FFF8EE; border-color: #E07000; }
+    .metric-naranja .metric-numero { color: #E07000; }
+    .metric-naranja .metric-label { color: #c06000; }
+    .metric-verde { background: #F0FFF4; border-color: #2E7D32; }
+    .metric-verde .metric-numero { color: #2E7D32; }
+    .metric-verde .metric-label { color: #388e3c; }
+    .metric-amarillo { background: #FFFDE7; border-color: #F9A825; }
+    .metric-amarillo .metric-numero { color: #F57F17; }
+    .metric-amarillo .metric-label { color: #e65100; }
+
+    /* SECCION TITULO */
+    .seccion-titulo {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #1A1A1A;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        border-left: 4px solid #C8102E;
+        padding-left: 10px;
+        margin: 20px 0 12px 0;
+    }
+
+    /* UPLOAD */
+    .upload-card {
+        background: #F8F8F8;
+        border: 2px dashed #CCCCCC;
+        border-radius: 12px;
+        padding: 28px 24px 16px 24px;
+        text-align: center;
+        margin-bottom: 24px;
+        transition: border-color 0.2s;
+    }
+    .upload-card:hover { border-color: #C8102E; }
+    .upload-titulo {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #1A1A1A;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 4px;
+    }
+    .upload-sub {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        color: #888;
+        margin-bottom: 12px;
+    }
+
+    /* BOTONES */
+    .stButton > button, .stDownloadButton > button {
+        background: #C8102E !important;
         color: white !important;
         border: none !important;
-        border-radius: 8px !important;
-        font-family: 'Rajdhani', sans-serif !important;
+        border-radius: 6px !important;
+        font-family: 'Barlow Condensed', sans-serif !important;
         font-size: 1rem !important;
-        font-weight: 600 !important;
-        letter-spacing: 1px !important;
+        font-weight: 700 !important;
+        letter-spacing: 2px !important;
         padding: 10px 24px !important;
         width: 100% !important;
+        text-transform: uppercase !important;
     }
-    [data-testid="stFileUploader"] {
-        background: rgba(10,22,40,0.4);
-        border-radius: 8px;
-        padding: 4px;
+    .stButton > button:hover, .stDownloadButton > button:hover {
+        background: #a50d25 !important;
     }
-    [data-testid="stFileUploaderDropzone"] {
-        background: transparent !important;
-        border: 1px dashed rgba(46,117,182,0.4) !important;
-        border-radius: 8px !important;
-    }
-    .stSelectbox label, .stMultiSelect label {
-        color: #8BA3C7 !important;
-        font-size: 0.78rem !important;
+
+    /* SELECTBOX */
+    .stSelectbox label, .stTextInput label {
+        color: #555 !important;
+        font-size: 0.72rem !important;
         text-transform: uppercase !important;
         letter-spacing: 1px !important;
     }
+    [data-testid="stSelectbox"] > div > div {
+        background: #F5F5F5 !important;
+        color: #1A1A1A !important;
+        border-color: #CCCCCC !important;
+    }
+
+    /* FILE UPLOADER */
+    [data-testid="stFileUploader"] { background: transparent; }
+    [data-testid="stFileUploaderDropzone"] {
+        background: #FAFAFA !important;
+        border: 1px dashed #CCC !important;
+        border-radius: 8px !important;
+    }
+    [data-testid="stFileUploaderDropzoneInstructions"] { color: #888 !important; }
+
+    /* INFO BOX */
+    .info-box {
+        background: #F5F5F5;
+        border: 1px solid #E0E0E0;
+        border-radius: 8px;
+        padding: 12px 16px;
+        color: #555;
+        font-size: 0.82rem;
+    }
+
+    /* TABLA */
+    [data-testid="stDataFrame"] { border-radius: 8px; overflow: hidden; border: 1px solid #E0E0E0; }
+
+    /* DIVIDER */
+    hr { border-color: #E0E0E0 !important; }
+
+    /* SPINNER */
+    .stSpinner { color: #C8102E !important; }
 </style>
 """, unsafe_allow_html=True)
 
+# ============================================================
+# CONFIG
+# ============================================================
 FECHA_HOY = date.today()
 MARGEN_MATERIALES = 180
 DIAS_PROXIMO = 45
@@ -149,6 +218,17 @@ def calcular_proximo(dias):
     elif dias < 0: return "REVISAR"
     elif dias >= DIAS_PROXIMO: return "OK"
     else: return "PRÓXIMO"
+
+def get_logo_base64():
+    paths = ["assets/logo.png", "assets/logo.jpg", "assets/logo.PNG"]
+    for p in paths:
+        if os.path.exists(p):
+            ext = p.split(".")[-1].lower()
+            mime = "image/png" if ext == "png" else "image/jpeg"
+            with open(p, "rb") as f:
+                data = base64.b64encode(f.read()).decode()
+            return f"data:{mime};base64,{data}"
+    return None
 
 def procesar_csv(archivo):
     try:
@@ -168,7 +248,6 @@ def procesar_csv(archivo):
     df["Frecuencia"] = pd.to_numeric(df.get("Frecuencia", pd.Series()), errors="coerce")
     df["Frecuencia acumulada"] = pd.to_numeric(df.get("Frecuencia acumulada", pd.Series()), errors="coerce")
     df["Fecha planificada"] = pd.to_datetime(df.get("Fecha planificada", pd.Series()), dayfirst=True, errors="coerce")
-
     df["DIFERENCIA FRECUENCIA"] = df["Frecuencia"] - df["Frecuencia acumulada"]
     df["PEDIR MATERIAL"] = df["DIFERENCIA FRECUENCIA"].apply(
         lambda x: "PEDIR MATERIAL" if pd.notna(x) and x <= MARGEN_MATERIALES else "NO"
@@ -182,17 +261,16 @@ def procesar_csv(archivo):
 
 def generar_excel(df):
     columnas = [
-        "Tipo de mantenimiento", "Tipo de Activo", "Layout (Activo)", "Activo",
-        "Código de Frecuencia", "Parte", "Tarea",
-        "Fecha planificada", "FECHA DE PARTIDA", "DIAS PARA TAREA", "PRÓXIMO",
-        "Frecuencia", "Frecuencia acumulada", "DIFERENCIA FRECUENCIA", "PEDIR MATERIAL",
-        "Estado", "OT"
+        "Tipo de mantenimiento","Tipo de Activo","Layout (Activo)","Activo",
+        "Código de Frecuencia","Parte","Tarea","Fecha planificada","FECHA DE PARTIDA",
+        "DIAS PARA TAREA","PRÓXIMO","Frecuencia","Frecuencia acumulada",
+        "DIFERENCIA FRECUENCIA","PEDIR MATERIAL","Estado","OT"
     ]
     cols = [c for c in columnas if c in df.columns]
     df_e = df[cols]
     wb = Workbook()
     wb.remove(wb.active)
-    ln = Side(style="thin", color="B8B8B8")
+    ln = Side(style="thin", color="CCCCCC")
     brd = Border(left=ln, right=ln, top=ln, bottom=ln)
     aw = {
         "Tipo de mantenimiento":18,"Tipo de Activo":22,"Layout (Activo)":35,"Activo":40,
@@ -206,14 +284,14 @@ def generar_excel(df):
         ws.freeze_panes = "A2"
         for ci, cn in enumerate(cols, 1):
             c = ws.cell(row=1, column=ci, value=cn)
-            c.fill = PatternFill("solid", fgColor="2E75B6" if cn in nw else "1F3864")
+            c.fill = PatternFill("solid", fgColor="C8102E" if cn in nw else "1A1A1A")
             c.font = Font(bold=True, color="FFFFFF", name="Arial", size=10)
             c.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
             c.border = brd
             ws.column_dimensions[get_column_letter(ci)].width = aw.get(cn, 14)
         ws.row_dimensions[1].height = 30
         for ri, (_, fila) in enumerate(datos.iterrows(), 2):
-            bf = PatternFill("solid", fgColor="DCE6F1" if ri%2==0 else "FFFFFF")
+            bf = PatternFill("solid", fgColor="F5F5F5" if ri%2==0 else "FFFFFF")
             for ci, cn in enumerate(cols, 1):
                 val = fila[cn]
                 c = ws.cell(row=ri, column=ci)
@@ -224,7 +302,7 @@ def generar_excel(df):
                 elif cn == "OT": c.value = int(val) if pd.notna(val) else None
                 elif cn == "DIAS PARA TAREA": c.value = int(val) if pd.notna(val) else None
                 else: c.value = val if pd.notna(val) else None
-                c.font = Font(name="Arial", size=9)
+                c.font = Font(name="Arial", size=9, color="1A1A1A")
                 c.border = brd
                 if cn == "PEDIR MATERIAL":
                     c.fill = PatternFill("solid", fgColor="FFE699" if val=="PEDIR MATERIAL" else "E2EFDA")
@@ -259,77 +337,93 @@ def generar_excel(df):
     return buf
 
 # ============================================================
-# INTERFAZ PRINCIPAL
+# HEADER
 # ============================================================
+logo_src = get_logo_base64()
+if logo_src:
+    logo_html = f'<img src="{logo_src}" style="height: 44px; object-fit: contain;">'
+else:
+    logo_html = '<span style="font-family: Barlow Condensed, sans-serif; font-size: 1.8rem; font-weight: 800; color: #C8102E; letter-spacing: 3px;">A.PE.S.A.</span>'
 
-# Header
 st.markdown(f"""
-<div style='padding: 0 0 16px 0; border-bottom: 1px solid rgba(46,117,182,0.3); margin-bottom: 20px;'>
-    <div class='titulo-principal'>Control de Mantenimiento</div>
-    <div class='subtitulo'>GESTIÓN DE PREVENTIVOS · FLOTA VIAL · SISTEMA CONSUMAN</div>
-</div>
-<div class='config-bar'>
-    <span style='color:#8BA3C7; font-size:0.82rem;'>📅 Fecha: <strong style='color:white;'>{FECHA_HOY.strftime('%d/%m/%Y')}</strong></span>
-    <span style='color:#8BA3C7; font-size:0.82rem;'>⚙️ Margen materiales: <strong style='color:white;'>{MARGEN_MATERIALES} hs</strong></span>
-    <span style='color:#8BA3C7; font-size:0.82rem;'>⚙️ Días próximo: <strong style='color:white;'>{DIAS_PROXIMO} días</strong></span>
+<div class="apesa-header">
+    {logo_html}
+    <div class="apesa-header-divider"></div>
+    <div>
+        <div class="apesa-header-titulo">Control de Mantenimiento</div>
+        <div class="apesa-header-sub">Gestión de Preventivos · Flota Vial · Sistema CONSUMAN</div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
-# Upload area en el centro
+# CONFIG BAR
+st.markdown(f"""
+<div class="config-bar">
+    <span style="color:#555; font-size:0.8rem;">📅 Fecha: <strong style="color:#1A1A1A;">{FECHA_HOY.strftime('%d/%m/%Y')}</strong></span>
+    <span style="color:#555; font-size:0.8rem;">⚙️ Margen materiales: <strong style="color:#1A1A1A;">{MARGEN_MATERIALES} hs</strong></span>
+    <span style="color:#555; font-size:0.8rem;">⚙️ Días próximo: <strong style="color:#1A1A1A;">{DIAS_PROXIMO} días</strong></span>
+</div>
+""", unsafe_allow_html=True)
+
+# ============================================================
+# UPLOAD
+# ============================================================
 col_iz, col_centro, col_der = st.columns([1, 2, 1])
 with col_centro:
     st.markdown("""
-    <div class='upload-card'>
-        <div class='upload-titulo'>📂 Subir reporte de CONSUMAN</div>
-        <div class='upload-subtitulo'>Consultar → Planes de Mantenimiento por Activo → Exportar → Guardar como CSV</div>
+    <div class="upload-card">
+        <div class="upload-titulo">📂 Subir reporte de CONSUMAN</div>
+        <div class="upload-sub">Consultar → Planes de Mantenimiento por Activo → Exportar → Guardar como CSV</div>
     </div>
     """, unsafe_allow_html=True)
     archivo = st.file_uploader("", type=["csv"], label_visibility="collapsed")
 
+# ============================================================
+# CONTENIDO PRINCIPAL
+# ============================================================
 if archivo is None:
-    # Pantalla de bienvenida
     st.markdown("<br>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown("<div class='metric-card metric-azul'><div class='metric-numero'>📂</div><div class='metric-label'>1. Subí el CSV de CONSUMAN</div></div>", unsafe_allow_html=True)
-    with col2:
-        st.markdown("<div class='metric-card metric-azul'><div class='metric-numero'>📊</div><div class='metric-label'>2. Visualizá el tablero</div></div>", unsafe_allow_html=True)
-    with col3:
-        st.markdown("<div class='metric-card metric-azul'><div class='metric-numero'>⬇️</div><div class='metric-label'>3. Descargá el Excel</div></div>", unsafe_allow_html=True)
+    c1,c2,c3 = st.columns(3)
+    with c1: st.markdown("<div class='metric-card metric-total'><div class='metric-numero'>📂</div><div class='metric-label'>1. Subí el CSV</div></div>", unsafe_allow_html=True)
+    with c2: st.markdown("<div class='metric-card metric-total'><div class='metric-numero'>📊</div><div class='metric-label'>2. Visualizá el tablero</div></div>", unsafe_allow_html=True)
+    with c3: st.markdown("<div class='metric-card metric-total'><div class='metric-numero'>⬇️</div><div class='metric-label'>3. Descargá el Excel</div></div>", unsafe_allow_html=True)
 else:
     with st.spinner("Procesando datos..."):
         df = procesar_csv(archivo)
 
-    total = len(df)
-    pedir = len(df[df["PEDIR MATERIAL"]=="PEDIR MATERIAL"])
+    total   = len(df)
+    pedir   = len(df[df["PEDIR MATERIAL"]=="PEDIR MATERIAL"])
     revisar = len(df[df["PRÓXIMO"]=="REVISAR"])
     proximo = len(df[df["PRÓXIMO"]=="PRÓXIMO"])
-    ok = len(df[df["PRÓXIMO"]=="OK"])
+    ok      = len(df[df["PRÓXIMO"]=="OK"])
 
     st.markdown("<div class='seccion-titulo'>Resumen</div>", unsafe_allow_html=True)
-    col1,col2,col3,col4,col5 = st.columns(5)
-    with col1: st.markdown(f"<div class='metric-card metric-azul'><div class='metric-numero'>{total}</div><div class='metric-label'>Total tareas</div></div>", unsafe_allow_html=True)
-    with col2: st.markdown(f"<div class='metric-card metric-amarillo'><div class='metric-numero'>{pedir}</div><div class='metric-label'>Pedir material</div></div>", unsafe_allow_html=True)
-    with col3: st.markdown(f"<div class='metric-card metric-rojo'><div class='metric-numero'>{revisar}</div><div class='metric-label'>Revisar</div></div>", unsafe_allow_html=True)
-    with col4: st.markdown(f"<div class='metric-card metric-amarillo'><div class='metric-numero'>{proximo}</div><div class='metric-label'>Próximo</div></div>", unsafe_allow_html=True)
-    with col5: st.markdown(f"<div class='metric-card metric-verde'><div class='metric-numero'>{ok}</div><div class='metric-label'>OK</div></div>", unsafe_allow_html=True)
+    c1,c2,c3,c4,c5 = st.columns(5)
+    with c1: st.markdown(f"<div class='metric-card metric-total'><div class='metric-numero'>{total}</div><div class='metric-label'>Total tareas</div></div>", unsafe_allow_html=True)
+    with c2: st.markdown(f"<div class='metric-card metric-amarillo'><div class='metric-numero'>{pedir}</div><div class='metric-label'>Pedir material</div></div>", unsafe_allow_html=True)
+    with c3: st.markdown(f"<div class='metric-card metric-rojo'><div class='metric-numero'>{revisar}</div><div class='metric-label'>Revisar</div></div>", unsafe_allow_html=True)
+    with c4: st.markdown(f"<div class='metric-card metric-naranja'><div class='metric-numero'>{proximo}</div><div class='metric-label'>Próximo</div></div>", unsafe_allow_html=True)
+    with c5: st.markdown(f"<div class='metric-card metric-verde'><div class='metric-numero'>{ok}</div><div class='metric-label'>OK</div></div>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("<div class='seccion-titulo'>Filtros</div>", unsafe_allow_html=True)
 
-    col1,col2,col3 = st.columns(3)
-    with col1:
+    c1,c2,c3,c4 = st.columns(4)
+    with c1:
         tipos = ["Todos"] + sorted(df["Tipo de Activo"].dropna().unique().tolist())
         tipo_sel = st.selectbox("Tipo de Activo", tipos)
-    with col2:
+    with c2:
         estado_mat = st.selectbox("Pedir Material", ["Todos","PEDIR MATERIAL","NO"])
-    with col3:
+    with c3:
         estado_prox = st.selectbox("Estado", ["Todos","REVISAR","PRÓXIMO","OK"])
+    with c4:
+        buscar = st.text_input("Buscar activo", placeholder="Ej: AP17, C42...")
 
     df_f = df.copy()
     if tipo_sel != "Todos": df_f = df_f[df_f["Tipo de Activo"]==tipo_sel]
     if estado_mat != "Todos": df_f = df_f[df_f["PEDIR MATERIAL"]==estado_mat]
     if estado_prox != "Todos": df_f = df_f[df_f["PRÓXIMO"]==estado_prox]
+    if buscar: df_f = df_f[df_f["Activo"].str.contains(buscar, case=False, na=False)]
 
     st.markdown(f"<div class='seccion-titulo'>Datos — {len(df_f)} registros</div>", unsafe_allow_html=True)
 
@@ -343,23 +437,25 @@ else:
 
     st.dataframe(df_disp, use_container_width=True, height=420, hide_index=True)
 
+    st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("<div class='seccion-titulo'>Descargar Excel</div>", unsafe_allow_html=True)
-    col1, col2 = st.columns([1,2])
-    with col1:
+
+    c1,c2 = st.columns([1,2])
+    with c1:
         excel_buf = generar_excel(df)
-        nombre = f"Control_Preventivos_{FECHA_HOY.strftime('%Y%m%d')}.xlsx"
+        nombre = f"APESA_Preventivos_{FECHA_HOY.strftime('%Y%m%d')}.xlsx"
         st.download_button(
             label="⬇️  DESCARGAR EXCEL COMPLETO",
             data=excel_buf,
             file_name=nombre,
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-    with col2:
+    with c2:
         st.markdown(f"""
         <div class='info-box'>
-            El Excel incluye <strong style='color:white;'>{len(df)} registros</strong>,
-            <strong style='color:white;'>{df['Activo'].nunique()} máquinas</strong> y
-            <strong style='color:white;'>{df['Tipo de Activo'].nunique()+1} hojas</strong>
-            con todos los colores y formatos.
+            El Excel incluye <strong style='color:#1A1A1A;'>{len(df)} registros</strong>,
+            <strong style='color:#1A1A1A;'>{df['Activo'].nunique()} máquinas</strong> y
+            <strong style='color:#1A1A1A;'>{df['Tipo de Activo'].nunique()+1} hojas</strong>
+            con encabezados APESA y semáforos de color.
         </div>
         """, unsafe_allow_html=True)
