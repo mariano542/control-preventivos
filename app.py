@@ -156,7 +156,8 @@ st.markdown("""
         height: 60px;
         object-fit: contain;
         flex-shrink: 0;
-        filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+        mix-blend-mode: screen;
+        filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
     }
     .hero-divider {
         width: 3px;
