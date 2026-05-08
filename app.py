@@ -18,7 +18,8 @@ st.set_page_config(
     page_title="Control Preventivos",
     page_icon="🔧",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    menu_items={"Get Help": None, "Report a bug": None, "About": None}
 )
 
 # ============================================================
@@ -180,31 +181,28 @@ st.markdown("""
 
     div[data-testid="stDataFrame"] { border-radius: 8px; overflow: hidden; }
 
-    /* Ocultar barra de herramientas de Streamlit */
-    #MainMenu { visibility: hidden; }
-    header { visibility: hidden; }
-    footer { visibility: hidden; }
-    .stDeployButton { display: none; }
-    [data-testid="stToolbar"] { display: none; }
-    [data-testid="stDecoration"] { display: none; }
-    [data-testid="stStatusWidget"] { display: none; }
+    /* Ocultar todos los elementos de la barra de Streamlit */
+    #MainMenu {visibility: hidden !important; display: none !important;}
+    header[data-testid="stHeader"] {visibility: hidden !important; display: none !important;}
+    footer {visibility: hidden !important; display: none !important;}
+    .stDeployButton {display: none !important;}
+    [data-testid="stToolbar"] {display: none !important;}
+    [data-testid="stDecoration"] {display: none !important;}
+    [data-testid="stStatusWidget"] {display: none !important;}
+    [data-testid="manage-app-button"] {display: none !important;}
+    .st-emotion-cache-zq5wmm {display: none !important;}
+    .viewerBadge_container__r5tak {display: none !important;}
 
     /* Ajustar el area de carga de archivos */
     [data-testid="stFileUploader"] {
-        background: rgba(31, 56, 100, 0.4);
-        border: 2px dashed rgba(46, 117, 182, 0.6);
-        border-radius: 10px;
-        padding: 8px;
+        background: rgba(31, 56, 100, 0.4) !important;
+        border: 2px dashed rgba(46, 117, 182, 0.6) !important;
+        border-radius: 10px !important;
+        padding: 8px !important;
     }
-    [data-testid="stFileUploader"] label { display: none; }
     [data-testid="stFileUploaderDropzone"] {
         background: transparent !important;
         border: none !important;
-        padding: 4px !important;
-    }
-    [data-testid="stFileUploaderDropzoneInstructions"] {
-        color: #8BA3C7 !important;
-        font-size: 0.8rem !important;
     }
 
     .stSelectbox label, .stMultiSelect label {
