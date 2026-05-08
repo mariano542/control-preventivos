@@ -121,9 +121,9 @@ st.markdown("""
     [data-testid="stStatusWidget"],.stDeployButton,[data-testid="collapsedControl"]
     { display:none!important; visibility:hidden!important; }
 
-    .stApp { background:#F2F2F2!important; }
-    .main .block-container { background:#F2F2F2!important; padding-top:0!important; max-width:100%!important; padding-left:0!important; padding-right:0!important; }
-    section[data-testid="stMain"] { background:#F2F2F2!important; }
+    .stApp { background:#111111!important; }
+    .main .block-container { background:#111111!important; padding-top:0!important; max-width:100%!important; padding-left:0!important; padding-right:0!important; }
+    section[data-testid="stMain"] { background:#111111!important; }
 
     h1,h2,h3 { font-family:'Barlow Condensed',sans-serif!important; }
     p,div,span,label { font-family:'Inter',sans-serif!important; }
@@ -146,7 +146,7 @@ st.markdown("""
     .hero-overlay {
         position: absolute;
         inset: 0;
-        background: linear-gradient(90deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.3) 100%);
+        background: linear-gradient(90deg, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0.92) 40%, rgba(255,255,255,0.5) 70%, rgba(255,255,255,0) 100%);
         display: flex;
         align-items: center;
         padding: 0 40px;
@@ -337,7 +337,7 @@ st.markdown("""
     [data-testid="stFileUploader"] > label { display:none!important; }
 
     /* DATAFRAME */
-    [data-testid="stDataFrame"] { border-radius:10px; overflow:hidden; border:1px solid #E0E0E0; box-shadow:0 2px 12px rgba(0,0,0,0.06); }
+    [data-testid="stDataFrame"] { border-radius:10px; overflow:hidden; border:1px solid #333; box-shadow:0 2px 12px rgba(0,0,0,0.3); }
 
     /* INFO BOX */
     .info-box {
@@ -375,9 +375,9 @@ st.markdown("<div class='content-area'>", unsafe_allow_html=True)
 # CONFIG BAR
 st.markdown(f"""
 <div class="config-bar">
-    <span style="color:#555;font-size:0.82rem;">📅 Fecha: <strong style="color:#1A1A1A;">{FECHA_HOY.strftime('%d/%m/%Y')}</strong></span>
-    <span style="color:#555;font-size:0.82rem;">⚙️ Margen materiales: <strong style="color:#1A1A1A;">{MARGEN_MATERIALES} hs</strong></span>
-    <span style="color:#555;font-size:0.82rem;">⚙️ Días próximo: <strong style="color:#1A1A1A;">{DIAS_PROXIMO} días</strong></span>
+    <span style="color:#999;font-size:0.82rem;">📅 Fecha: <strong style="color:#FFFFFF;">{FECHA_HOY.strftime('%d/%m/%Y')}</strong></span>
+    <span style="color:#999;font-size:0.82rem;">⚙️ Margen materiales: <strong style="color:#FFFFFF;">{MARGEN_MATERIALES} hs</strong></span>
+    <span style="color:#999;font-size:0.82rem;">⚙️ Días próximo: <strong style="color:#FFFFFF;">{DIAS_PROXIMO} días</strong></span>
 </div>
 """, unsafe_allow_html=True)
 
