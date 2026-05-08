@@ -149,7 +149,25 @@ st.markdown("""
     [data-testid="stFileUploaderDropzone"]{background:#1A1A1A!important;border:1px dashed #C8102E!important;border-radius:10px!important;padding:16px!important;}
     [data-testid="stFileUploaderDropzoneInstructions"]{display:none!important;}
     [data-testid="stFileUploader"] > label{display:none!important;}
-    [data-testid="stFileUploaderDropzone"] button{background:#C8102E!important;color:white!important;border:none!important;border-radius:6px!important;font-family:'Barlow Condensed',sans-serif!important;font-weight:700!important;letter-spacing:1px!important;text-transform:uppercase!important;}
+    [data-testid="stFileUploaderDropzone"] button{
+        font-size: 0 !important;
+        width: 48px !important;
+        height: 48px !important;
+        border-radius: 50% !important;
+        background: #C8102E !important;
+        border: none !important;
+        position: relative !important;
+        padding: 0 !important;
+        min-width: unset !important;
+    }
+    [data-testid="stFileUploaderDropzone"] button::after{
+        content: "⬆️" !important;
+        font-size: 1.4rem !important;
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+    }
     [data-testid="stDataFrame"]{border-radius:10px;overflow:hidden;border:1px solid #333;box-shadow:0 2px 12px rgba(0,0,0,0.4);}
     .info-box{background:#1E1E1E;border:1px solid #333;border-radius:10px;padding:14px 18px;color:#888;font-size:0.82rem;}
     hr{border-color:#2A2A2A!important;}
