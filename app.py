@@ -196,56 +196,16 @@ st.markdown(f"""
 
 st.markdown("<div class='content-pad'>", unsafe_allow_html=True)
 
-# Upload con overlay invisible encima del boton custom
-st.markdown("""
-<style>
-    .upload-wrapper {
-        position: relative;
-        width: 100%;
-        margin-bottom: 8px;
-    }
-    .upload-visual {
-        width: 100%;
-        padding: 40px 20px;
-        background: #1E1E1E;
-        border: 2px dashed #C8102E;
-        border-radius: 14px;
-        text-align: center;
-        pointer-events: none;
-    }
-    .upload-visual .upload-arrow { font-size: 3rem; display: block; margin-bottom: 10px; }
-    .upload-visual .upload-main { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; color: #FFFFFF; text-transform: uppercase; letter-spacing: 2px; display: block; margin-bottom: 6px; }
-    .upload-visual .upload-sec { font-family: 'Inter', sans-serif; font-size: 0.82rem; color: #C8102E; font-weight: 600; display: block; margin-bottom: 4px; }
-    .upload-visual .upload-hint-text { font-family: 'Inter', sans-serif; font-size: 0.68rem; color: #444; display: block; }
-    /* El uploader nativo queda encima, invisible, funcional */
-    [data-testid="stFileUploader"] {
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        opacity: 0 !important;
-        cursor: pointer !important;
-        z-index: 10 !important;
-    }
-    [data-testid="stFileUploaderDropzone"] {
-        width: 100% !important;
-        height: 100% !important;
-        cursor: pointer !important;
-    }
-</style>
-""", unsafe_allow_html=True)
-
 col_iz, col_centro, col_der = st.columns([1, 2, 1])
 with col_centro:
-    st.markdown('''
-    <div class="upload-visual">
-        <span class="upload-arrow">⬆️</span>
-        <span class="upload-main">Subir reporte de CONSUMAN</span>
-        <span class="upload-sec">Adjuntá el archivo CSV</span>
-        <span class="upload-hint-text">Consultar → Planes de Mantenimiento por Activo → Exportar → Guardar como CSV</span>
+    st.markdown("""
+    <div style="text-align:center; padding:28px 0 8px 0;">
+        <div style="font-size:3rem; margin-bottom:10px;">⬆️</div>
+        <div style="font-family:'Barlow Condensed',sans-serif; font-size:1.3rem; font-weight:700; color:#FFFFFF; text-transform:uppercase; letter-spacing:2px; margin-bottom:6px;">Subir reporte de CONSUMAN</div>
+        <div style="font-family:'Inter',sans-serif; font-size:0.82rem; color:#C8102E; font-weight:600; margin-bottom:4px;">Adjuntá el archivo CSV</div>
+        <div style="font-family:'Inter',sans-serif; font-size:0.68rem; color:#444; margin-bottom:16px;">Consultar → Planes de Mantenimiento por Activo → Exportar → Guardar como CSV</div>
     </div>
-    ''', unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
     archivo = st.file_uploader("", type=["csv"], label_visibility="collapsed")
 
 if archivo is None:
