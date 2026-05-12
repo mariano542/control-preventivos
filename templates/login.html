@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APESA · Control de Mantenimiento</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #111111; font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+        .login-container {
+            background: #1E1E1E;
+            border: 1px solid #2A2A2A;
+            border-top: 4px solid #C8102E;
+            border-radius: 12px;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+
+        .login-logo {
+            height: 56px;
+            object-fit: contain;
+            margin-bottom: 24px;
+        }
+
+        .login-titulo {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #C8102E;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 4px;
+        }
+
+        .login-sub {
+            font-size: 0.72rem;
+            color: #555;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 36px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.72rem;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            text-align: left;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: #111111;
+            border: 1px solid #333;
+            border-radius: 7px;
+            color: #FFFFFF;
+            font-size: 1.1rem;
+            letter-spacing: 4px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
+            margin-bottom: 20px;
+        }
+
+        .form-input:focus { border-color: #C8102E; }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: #C8102E;
+            color: white;
+            border: none;
+            border-radius: 7px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn-login:hover { background: #a50d25; transform: translateY(-1px); }
+        .btn-login:active { transform: translateY(0); }
+
+        .error-msg {
+            background: rgba(200, 16, 46, 0.15);
+            border: 1px solid #C8102E;
+            border-radius: 6px;
+            padding: 10px 16px;
+            color: #ff6b6b;
+            font-size: 0.82rem;
+            margin-bottom: 16px;
+        }
+
+        .footer-text {
+            margin-top: 32px;
+            font-size: 0.68rem;
+            color: #333;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="APESA" class="login-logo">
+        <div class="login-titulo">Acceso Restringido</div>
+        <div class="login-sub">Control de Mantenimiento Preventivo</div>
+
+        {% if error %}
+        <div class="error-msg">⚠️ {{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <label class="form-label">Contraseña de acceso</label>
+            <input type="password" name="password" class="form-input" placeholder="••••••••" autofocus>
+            <button type="submit" class="btn-login">INGRESAR</button>
+        </form>
+
+        <div class="footer-text">A.PE.S.A. · Sistema de Gestión Interno · v1.0</div>
+    </div>
+</body>
+</html>
