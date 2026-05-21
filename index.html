@@ -292,11 +292,10 @@ function procesarCSV() {
                 const wb = XLSX.read(e.target.result, { type: 'array', cellDates: false });
                 const ws = wb.Sheets[wb.SheetNames[0]];
                 
-                // Convertir a JSON con raw=false para que las fechas vengan como string
+                // Leer con raw:true para manejar fechas manualmente
                 const data = XLSX.utils.sheet_to_json(ws, { 
                     defval: '',
-                    raw: false,
-                    dateNF: 'dd/mm/yyyy'
+                    raw: true
                 });
                 
                 if (!data || data.length === 0) {
@@ -305,11 +304,32 @@ function procesarCSV() {
                     return;
                 }
                 
-                // Normalizar nombres de columnas (trim espacios)
+                // Convertir fechas seriales de Excel a string DD/MM/YYYY
+                // Excel serial: days since 1900-01-01 (with leap year bug)
+                function excelSerialToDate(serial) {
+                    if (!serial || isNaN(serial)) return '';
+                    const utc_days = Math.floor(serial - 25569);
+                    const utc_value = utc_days * 86400 * 1000;
+                    const d = new Date(utc_value);
+                    if (isNaN(d.getTime())) return '';
+                    return String(d.getUTCDate()).padStart(2,'0') + '/' +
+                           String(d.getUTCMonth()+1).padStart(2,'0') + '/' +
+                           d.getUTCFullYear();
+                }
+                
+                // Normalizar datos
                 const dataNorm = data.map(row => {
                     const newRow = {};
                     Object.keys(row).forEach(k => {
-                        newRow[k.trim()] = typeof row[k] === 'string' ? row[k].trim() : row[k];
+                        const key = k.trim();
+                        let val = row[k];
+                        // Si es columna de fecha y valor es numero, convertir
+                        if ((key === 'Fecha planificada' || key === 'Fecha de realización de la Tarea') && typeof val === 'number') {
+                            val = excelSerialToDate(val);
+                        } else if (typeof val === 'string') {
+                            val = val.trim();
+                        }
+                        newRow[key] = val;
                     });
                     return newRow;
                 });
