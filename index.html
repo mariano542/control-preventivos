@@ -289,15 +289,32 @@ function procesarCSV() {
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
-                const wb = XLSX.read(e.target.result, { type: 'array', cellDates: true });
+                const wb = XLSX.read(e.target.result, { type: 'array', cellDates: false });
                 const ws = wb.Sheets[wb.SheetNames[0]];
-                const data = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                
+                // Convertir a JSON con raw=false para que las fechas vengan como string
+                const data = XLSX.utils.sheet_to_json(ws, { 
+                    defval: '',
+                    raw: false,
+                    dateNF: 'dd/mm/yyyy'
+                });
+                
                 if (!data || data.length === 0) {
                     document.getElementById('loading').classList.remove('show');
                     mostrarError('El archivo Excel está vacío o no tiene datos válidos');
                     return;
                 }
-                procesarDatos(data);
+                
+                // Normalizar nombres de columnas (trim espacios)
+                const dataNorm = data.map(row => {
+                    const newRow = {};
+                    Object.keys(row).forEach(k => {
+                        newRow[k.trim()] = typeof row[k] === 'string' ? row[k].trim() : row[k];
+                    });
+                    return newRow;
+                });
+                
+                procesarDatos(dataNorm);
             } catch(e) {
                 document.getElementById('loading').classList.remove('show');
                 mostrarError('Error al leer el Excel: ' + e.message);
@@ -357,16 +374,31 @@ function procesarDatos(data) {
         let proximo = '';
 
         const fp = r['Fecha planificada'];
-        if (fp && fp.trim()) {
-            // Parse DD/M/YYYY H:MM or DD/MM/YYYY
-            const parts = fp.trim().split(' ')[0].split('/');
-            if (parts.length === 3) {
-                const d = parseInt(parts[0]);
-                const m = parseInt(parts[1]) - 1;
-                const y = parseInt(parts[2]);
+        if (fp !== undefined && fp !== null && String(fp).trim() !== '') {
+            const fpStr = String(fp).trim();
+            let d, m, y;
+            
+            // Try DD/MM/YYYY or D/M/YYYY (with optional time)
+            const partsSlash = fpStr.split(' ')[0].split('/');
+            // Try YYYY-MM-DD (ISO)
+            const partsISO = fpStr.split('T')[0].split('-');
+            
+            if (partsSlash.length === 3) {
+                d = parseInt(partsSlash[0]);
+                m = parseInt(partsSlash[1]) - 1;
+                y = parseInt(partsSlash[2]);
+            } else if (partsISO.length === 3 && partsISO[0].length === 4) {
+                y = parseInt(partsISO[0]);
+                m = parseInt(partsISO[1]) - 1;
+                d = parseInt(partsISO[2]);
+            }
+            
+            if (d && m !== undefined && y && y > 2000) {
                 fechaPlan = new Date(y, m, d);
                 fechaPlan.setHours(0,0,0,0);
-                diasTarea = Math.round((fechaPlan - hoy) / (1000*60*60*24));
+                if (!isNaN(fechaPlan.getTime())) {
+                    diasTarea = Math.round((fechaPlan - hoy) / (1000*60*60*24));
+                }
             }
         }
 
