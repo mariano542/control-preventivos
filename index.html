@@ -156,13 +156,13 @@
         <div class="upload-section">
             <div class="upload-icon">⬆️</div>
             <div class="upload-titulo">Subir reporte de CONSUMAN</div>
-            <div class="upload-sub">Adjuntá el archivo CSV</div>
-            <div class="upload-hint">Consultar → Planes de Mantenimiento por Activo → Exportar → Guardar como CSV</div>
+            <div class="upload-sub">Adjuntá el archivo Excel o CSV</div>
+            <div class="upload-hint">Consultar → Planes de Mantenimiento por Activo → Exportar → Guardar como Excel o CSV</div>
 
             <div class="error-box" id="errorBox"></div>
 
             <div class="dropzone" id="dropzone">
-                <input type="file" id="csvInput" accept=".csv" onchange="onFileSelected(this)">
+                <input type="file" id="csvInput" accept=".csv,.xlsx,.xls" onchange="onFileSelected(this)">
                 <div class="dropzone-text" id="dropText">
                     Arrastrá el archivo acá o <span>hacé clic para seleccionar</span>
                 </div>
@@ -170,7 +170,7 @@
             </div>
 
             <button class="btn-procesar" id="btnProcesar" onclick="procesarCSV()" disabled>
-                ⚙️ PROCESAR REPORTE
+                ⚙️ PROCESAR ARCHIVO
             </button>
         </div>
 
@@ -277,43 +277,68 @@ dz.addEventListener('drop', e => {
     }
 });
 
-// PROCESS CSV
+// PROCESS CSV o XLSX
 function procesarCSV() {
     if (!csvFile) return;
     document.getElementById('loading').classList.add('show');
 
-    Papa.parse(csvFile, {
-        header: true,
-        skipEmptyLines: true,
-        encoding: 'UTF-8',
-        complete: function(results) {
-            try {
-                let data = results.data;
+    const nombre = csvFile.name.toLowerCase();
 
-                // Detectar separador si viene mal
-                if (data.length > 0 && Object.keys(data[0]).length < 3) {
-                    Papa.parse(csvFile, {
-                        header: true,
-                        skipEmptyLines: true,
-                        delimiter: ';',
-                        encoding: 'UTF-8',
-                        complete: function(r2) {
-                            procesarDatos(r2.data);
-                        }
-                    });
-                } else {
-                    procesarDatos(data);
+    if (nombre.endsWith('.xlsx') || nombre.endsWith('.xls')) {
+        // Leer Excel con SheetJS
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const wb = XLSX.read(e.target.result, { type: 'array', cellDates: true });
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                const data = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                if (!data || data.length === 0) {
+                    document.getElementById('loading').classList.remove('show');
+                    mostrarError('El archivo Excel está vacío o no tiene datos válidos');
+                    return;
                 }
+                procesarDatos(data);
             } catch(e) {
                 document.getElementById('loading').classList.remove('show');
-                mostrarError('Error al procesar: ' + e.message);
+                mostrarError('Error al leer el Excel: ' + e.message);
             }
-        },
-        error: function(e) {
+        };
+        reader.onerror = function() {
             document.getElementById('loading').classList.remove('show');
-            mostrarError('Error al leer el archivo: ' + e.message);
-        }
-    });
+            mostrarError('Error al abrir el archivo');
+        };
+        reader.readAsArrayBuffer(csvFile);
+    } else {
+        // Leer CSV con PapaParse
+        Papa.parse(csvFile, {
+            header: true,
+            skipEmptyLines: true,
+            encoding: 'UTF-8',
+            complete: function(results) {
+                try {
+                    let data = results.data;
+                    if (data.length > 0 && Object.keys(data[0]).length < 3) {
+                        Papa.parse(csvFile, {
+                            header: true,
+                            skipEmptyLines: true,
+                            delimiter: ';',
+                            encoding: 'UTF-8',
+                            complete: function(r2) { procesarDatos(r2.data); }
+                        });
+                    } else {
+                        procesarDatos(data);
+                    }
+                } catch(e) {
+                    document.getElementById('loading').classList.remove('show');
+                    mostrarError('Error al procesar: ' + e.message);
+                }
+            },
+            error: function(e) {
+                document.getElementById('loading').classList.remove('show');
+                mostrarError('Error al leer el archivo: ' + e.message);
+            }
+        });
+    }
 }
 
 function procesarDatos(data) {
