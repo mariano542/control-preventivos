@@ -292,7 +292,22 @@ function procesarCSV() {
                 const wb = XLSX.read(e.target.result, { type: 'array', cellDates: false });
                 const ws = wb.Sheets[wb.SheetNames[0]];
                 
-                // Leer con raw:true para manejar fechas manualmente
+                // Forzar rango completo ignorando el rango declarado
+                // El archivo tiene rango mal declarado, lo recalculamos
+                const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
+                
+                // Buscar el rango real escaneando las celdas
+                let maxRow = 0, maxCol = 0;
+                Object.keys(ws).forEach(key => {
+                    if (key[0] === '!') return;
+                    const cell = XLSX.utils.decode_cell(key);
+                    if (cell.r > maxRow) maxRow = cell.r;
+                    if (cell.c > maxCol) maxCol = cell.c;
+                });
+                
+                // Forzar el rango real
+                ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:maxRow,c:maxCol}});
+                
                 const data = XLSX.utils.sheet_to_json(ws, { 
                     defval: '',
                     raw: true
