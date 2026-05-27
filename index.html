@@ -95,16 +95,35 @@
         .table-wrap { overflow-x:auto; border-radius:10px; border:1px solid #2A2A2A; margin-bottom:20px; }
         table { width:100%; border-collapse:collapse; font-size:0.78rem; }
         thead th { background:#1A1A1A; color:#999; font-size:0.65rem; text-transform:uppercase; letter-spacing:1px; padding:0; border-bottom:2px solid #C8102E; white-space:nowrap; }
-        /* Celda interior del th para alinear sort + filtro */
-        .th-inner { display:flex; align-items:stretch; height:38px; }
-        .th-sort { flex:1; display:flex; align-items:center; gap:4px; padding:0 4px 0 8px; cursor:pointer; user-select:none; transition:color 0.15s; }
-        .th-sort:hover { color:#FFF; }
-        .th-sort.sorted-asc,
-        .th-sort.sorted-desc { color:#C8102E; }
-        .th-sort-icon { font-size:0.6rem; opacity:0.45; flex-shrink:0; }
-        .th-sort.sorted-asc .th-sort-icon,
-        .th-sort.sorted-desc .th-sort-icon { opacity:1; }
-        /* th-filter-btn-wrap eliminado — el botón va directo en th-inner */
+        /* Una sola celda-header: label + ícono sort + ícono filtro */
+        .th-cell {
+            display: flex;
+            align-items: center;
+            height: 36px;
+            padding: 0 6px 0 8px;
+            gap: 4px;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.15s;
+        }
+        .th-cell:hover { color: #DDD; }
+        .th-cell.sorted-asc,
+        .th-cell.sorted-desc { color: #C8102E; }
+        .th-label { flex: 1; }
+        .th-sort-icon { font-size: 0.58rem; opacity: 0.4; flex-shrink: 0; }
+        .th-cell.sorted-asc  .th-sort-icon,
+        .th-cell.sorted-desc .th-sort-icon { opacity: 1; }
+        .th-filter-icon {
+            font-size: 0.58rem;
+            opacity: 0.35;
+            flex-shrink: 0;
+            padding: 2px 3px;
+            border-radius: 3px;
+            transition: opacity 0.15s, background 0.15s, color 0.15s;
+            cursor: pointer;
+        }
+        .th-filter-icon:hover  { opacity: 1; color: #C8102E; background: rgba(200,16,46,0.12); }
+        .th-filter-icon.active { opacity: 1; color: #C8102E; }
         tbody tr { border-bottom:1px solid #1E1E1E; }
         tbody tr:hover { background:rgba(200,16,46,0.05); }
         tbody tr:nth-child(even) { background:#161616; }
@@ -137,49 +156,35 @@
         .error-box { background:rgba(200,16,46,0.1); border:1px solid #C8102E; border-radius:8px; padding:12px 16px; color:#ff6b6b; font-size:0.85rem; margin-bottom:16px; display:none; text-align:center; }
 
         /* FILTROS DE COLUMNA */
-        /* El botón ▼ se integra directo en th-inner sin wrapper extra */
-        .col-filter-btn {
-            background: transparent;
-            border: none;
-            border-left: 1px solid #2A2A2A;
-            color: #555;
-            cursor: pointer;
-            font-size: 0.65rem;
-            padding: 0 7px;
-            height: 100%;
-            transition: color 0.15s, background 0.15s;
-            line-height: 1;
-            flex-shrink: 0;
-        }
-        .col-filter-btn:hover { color:#C8102E; background:rgba(200,16,46,0.08); }
-        .col-filter-btn.active { color:#C8102E; background:rgba(200,16,46,0.12); }
-        .col-filter-dropdown {
+        /* col-filter-btn reemplazado por th-filter-icon */
+
+        /* Dropdown GLOBAL — único, posicionado por JS con fixed */
+        #globalFilterDropdown {
             display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
+            position: fixed;
             background: #1A1A1A;
             border: 1px solid #C8102E;
             border-radius: 6px;
-            z-index: 2000;
-            min-width: 200px;
-            max-height: 260px;
+            z-index: 9999;
+            width: 220px;
+            max-height: 280px;
+            flex-direction: column;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
             overflow: hidden;
-            box-shadow: 0 6px 24px rgba(0,0,0,0.7);
         }
-        .col-filter-dropdown.show { display: flex; flex-direction: column; }
-        .col-filter-search {
+        #globalFilterDropdown.show { display: flex; }
+        #gfd-search {
             width: 100%;
-            padding: 8px 10px;
+            padding: 9px 11px;
             background: #111;
             border: none;
             border-bottom: 1px solid #333;
             color: #FFF;
-            font-size: 0.78rem;
+            font-size: 0.8rem;
             outline: none;
             flex-shrink: 0;
         }
-        .col-filter-list { overflow-y: auto; max-height: 160px; flex: 1; }
+        #gfd-list { overflow-y: auto; flex: 1; }
         .col-filter-item {
             padding: 7px 12px;
             cursor: pointer;
@@ -191,17 +196,17 @@
             transition: background 0.1s;
             white-space: nowrap;
         }
-        .col-filter-item:hover { background: rgba(200,16,46,0.15); color:#FFF; }
+        .col-filter-item:hover { background: rgba(200,16,46,0.18); color:#FFF; }
         .col-filter-item input[type=checkbox] { accent-color:#C8102E; cursor:pointer; flex-shrink:0; }
-        .col-filter-actions {
+        #gfd-actions {
             padding: 8px 10px;
             border-top: 1px solid #333;
             display: flex;
             gap: 8px;
             flex-shrink: 0;
         }
-        .col-filter-apply { flex:1; padding:6px; background:#C8102E; color:#FFF; border:none; border-radius:4px; font-size:0.75rem; font-weight:700; cursor:pointer; text-transform:uppercase; letter-spacing:1px; }
-        .col-filter-clear  { flex:1; padding:6px; background:#333; color:#CCC; border:none; border-radius:4px; font-size:0.75rem; cursor:pointer; text-transform:uppercase; letter-spacing:1px; }
+        .col-filter-apply { flex:1; padding:7px; background:#C8102E; color:#FFF; border:none; border-radius:4px; font-size:0.75rem; font-weight:700; cursor:pointer; text-transform:uppercase; letter-spacing:1px; }
+        .col-filter-clear  { flex:1; padding:7px; background:#333; color:#CCC; border:none; border-radius:4px; font-size:0.75rem; cursor:pointer; text-transform:uppercase; letter-spacing:1px; }
         .col-filter-apply:hover { background:#a50d25; }
         .col-filter-clear:hover  { background:#444; }
         th { position: relative; }
@@ -791,109 +796,141 @@ const COLUMNAS = [
 ];
 
 let colFilters = {};
-let openDropdown = null;
 
 function initHeaders() {
     const tr = document.getElementById('theadRow');
     tr.innerHTML = '';
-    COLUMNAS.forEach(col => {
-        const isFiltered = colFilters[col.key] && colFilters[col.key].size > 0;
-        const isSortedThis = sortCol === col.key;
+    COLUMNAS.forEach(function(col) {
+        const isFiltered = !!(colFilters[col.key] && colFilters[col.key].size > 0);
+        const isSortedThis = (sortCol === col.key);
         const sortClass = isSortedThis ? (sortDir === 1 ? 'sorted-asc' : 'sorted-desc') : '';
-        const sortArrow = isSortedThis ? (sortDir === 1 ? ' ▲' : ' ▼') : ' ⇅';
-        // safe key para IDs (sin caracteres especiales)
-        const safeKey  = col.key.replace(/[^a-zA-Z0-9]/g,'_');
-        // escaped key para strings JS dentro de onclick (apostrofes escapados)
-        const eKey = col.key.replace(/'/g,"\'");
+        const sortArrow = isSortedThis ? (sortDir === 1 ? '▲' : '▼') : '⇅';
 
         const th = document.createElement('th');
-        th.innerHTML =
-            '<div class="th-inner">' +
-              '<div class="th-sort ' + sortClass + '" onclick="handleSort(\'' + eKey + '\')" title="Ordenar por ' + col.label + '">' +
-                col.label + '<span class="th-sort-icon">' + sortArrow + '</span>' +
-              '</div>' +
-              '<button class="col-filter-btn ' + (isFiltered ? 'active' : '') + '" onclick="toggleDropdown(event,\'' + eKey + '\')" title="Filtrar">▼</button>' +
-            '</div>' +
-            '<div class="col-filter-dropdown" id="drop_' + safeKey + '">' +
-              '<input class="col-filter-search" type="text" placeholder="Buscar..." oninput="filterDropdownItems(this,\'' + safeKey + '\')">' +
-              '<div class="col-filter-list" id="items_' + safeKey + '"></div>' +
-              '<div class="col-filter-actions">' +
-                '<button class="col-filter-apply" onclick="applyColFilter(\'' + eKey + '\')">Aplicar</button>' +
-                '<button class="col-filter-clear" onclick="clearColFilter(\'' + eKey + '\')">Limpiar</button>' +
-              '</div>' +
-            '</div>';
+
+        // Contenedor único horizontal
+        const cell = document.createElement('div');
+        cell.className = 'th-cell' + (sortClass ? ' ' + sortClass : '');
+
+        // Label
+        const lbl = document.createElement('span');
+        lbl.className = 'th-label';
+        lbl.textContent = col.label;
+
+        // Ícono de sort (clic = ordenar)
+        const sortIcon = document.createElement('span');
+        sortIcon.className = 'th-sort-icon';
+        sortIcon.textContent = sortArrow;
+
+        // Ícono de filtro (clic = abrir dropdown)
+        const filterIcon = document.createElement('span');
+        filterIcon.className = 'th-filter-icon' + (isFiltered ? ' active' : '');
+        filterIcon.title = 'Filtrar por ' + col.label;
+        filterIcon.textContent = '▼';
+
+        // Sort: clic en label o ícono sort
+        (function(key) {
+            lbl.addEventListener('click', function() { handleSort(key); });
+            sortIcon.addEventListener('click', function() { handleSort(key); });
+        })(col.key);
+
+        // Filtro: clic en ícono filtro
+        (function(key, icon) {
+            filterIcon.addEventListener('click', function(e) {
+                e.stopPropagation();
+                openGlobalDropdown(e, key, icon);
+            });
+        })(col.key, filterIcon);
+
+        cell.appendChild(lbl);
+        cell.appendChild(sortIcon);
+        cell.appendChild(filterIcon);
+        th.appendChild(cell);
         tr.appendChild(th);
     });
 }
 
-function toggleDropdown(e, colKey) {
-    e.stopPropagation();
-    const safeKey = colKey.replace(/[^a-zA-Z0-9]/g,'_');
-    const drop = document.getElementById('drop_' + safeKey);
+// Variable que guarda la colKey activa en el dropdown global
+let gfdActiveKey = null;
 
-    if (openDropdown && openDropdown !== drop) {
-        openDropdown.classList.remove('show');
-    }
+function openGlobalDropdown(e, colKey, btnEl) {
+    const dd = document.getElementById('globalFilterDropdown');
 
-    if (drop.classList.contains('show')) {
-        drop.classList.remove('show');
-        openDropdown = null;
+    // Si ya estaba abierto para esta misma columna, cerrar
+    if (gfdActiveKey === colKey && dd.classList.contains('show')) {
+        closeGlobalDropdown();
         return;
     }
 
-    const itemsDiv = document.getElementById('items_' + safeKey);
+    gfdActiveKey = colKey;
+
+    // Poblar lista
     const selected = colFilters[colKey] || new Set();
     const dataParaFiltro = getDataSinFiltro(colKey);
     let valores = [...new Set(dataParaFiltro.map(r => {
         let v = r[colKey];
-        if (v === null || v === undefined) return '';
-        return String(v);
-    }))].filter(v => v !== '').sort((a,b) => {
+        return (v === null || v === undefined) ? '' : String(v);
+    }))].filter(v => v !== '').sort((a, b) => {
         const na = parseFloat(a), nb = parseFloat(b);
         if (!isNaN(na) && !isNaN(nb)) return na - nb;
-        return a.localeCompare(b);
+        return a.localeCompare(b, 'es');
     });
 
-    itemsDiv.innerHTML = valores.map(v => `
-        <label class="col-filter-item">
-            <input type="checkbox" value="${v.replace(/"/g,'&quot;')}"
-                   ${selected.has(v) ? 'checked' : ''}>
-            ${v || '(vacío)'}
-        </label>`).join('');
+    const list = document.getElementById('gfd-list');
+    list.innerHTML = valores.map(v => {
+        const safe = v.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+        return '<label class="col-filter-item">' +
+            '<input type="checkbox" value="' + safe + '"' + (selected.has(v) ? ' checked' : '') + '>' +
+            (v || '(vacío)') +
+            '</label>';
+    }).join('');
 
-    drop.classList.add('show');
-    openDropdown = drop;
-    drop.querySelector('.col-filter-search').value = '';
-    drop.querySelector('.col-filter-search').focus();
+    document.getElementById('gfd-search').value = '';
+
+    // Posicionar: justo debajo del th que contiene el ícono filtro
+    const thEl    = btnEl.closest('th');
+    const thRect  = thEl.getBoundingClientRect();
+    dd.style.top  = (thRect.bottom + 2) + 'px';
+    // Alinear al borde izquierdo del th
+    const ddW = 220;
+    let left = thRect.left;
+    if (left + ddW > window.innerWidth - 8) left = window.innerWidth - ddW - 8;
+    if (left < 4) left = 4;
+    dd.style.left = left + 'px';
+
+    dd.classList.add('show');
+    document.getElementById('gfd-search').focus();
 }
 
-function filterDropdownItems(input, safeKey) {
-    const q = input.value.toLowerCase();
-    const items = document.querySelectorAll('#items_' + safeKey + ' label.col-filter-item');
-    items.forEach(item => {
-        item.style.display = item.textContent.toLowerCase().includes(q) ? '' : 'none';
-    });
+function closeGlobalDropdown() {
+    document.getElementById('globalFilterDropdown').classList.remove('show');
+    gfdActiveKey = null;
 }
 
-function applyColFilter(colKey) {
-    const safeKey = colKey.replace(/[^a-zA-Z0-9]/g,'_');
-    const checkboxes = document.querySelectorAll('#items_' + safeKey + ' input[type=checkbox]:checked');
-    if (checkboxes.length === 0) {
+// filterDropdownItems ya no se usa (reemplazado por búsqueda en dropdown global)
+
+function applyColFilter() {
+    if (!gfdActiveKey) return;
+    var colKey = gfdActiveKey;
+    // Leer TODOS los checkboxes (incluso los ocultos por búsqueda)
+    var allCbs  = document.querySelectorAll('#gfd-list input[type=checkbox]');
+    var checked = document.querySelectorAll('#gfd-list input[type=checkbox]:checked');
+    if (checked.length === 0 || checked.length === allCbs.length) {
+        // Sin selección o todo seleccionado = sin filtro
         delete colFilters[colKey];
     } else {
-        colFilters[colKey] = new Set([...checkboxes].map(cb => cb.value));
+        colFilters[colKey] = new Set(Array.prototype.slice.call(checked).map(function(cb){ return cb.value; }));
     }
-    // Cerrar dropdown ANTES de initHeaders (que destruye el DOM del dropdown)
-    openDropdown = null;
+    closeGlobalDropdown();
     filtrar();
     initHeaders();
     actualizarFiltrosActivos();
 }
 
-function clearColFilter(colKey) {
-    delete colFilters[colKey];
-    // Cerrar dropdown ANTES de initHeaders (que destruye el DOM del dropdown)
-    openDropdown = null;
+function clearColFilter() {
+    if (!gfdActiveKey) return;
+    delete colFilters[gfdActiveKey];
+    closeGlobalDropdown();
     filtrar();
     initHeaders();
     actualizarFiltrosActivos();
@@ -950,10 +987,19 @@ function mostrarError(msg) {
     eb.style.display = 'block';
 }
 
-document.addEventListener('click', function() {
-    if (openDropdown) {
-        openDropdown.classList.remove('show');
-        openDropdown = null;
+// Buscar en dropdown global
+function gfdBuscar(q) {
+    q = q.toLowerCase();
+    document.querySelectorAll('#gfd-list label.col-filter-item').forEach(function(item) {
+        item.style.display = item.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+}
+
+// Cerrar al click fuera
+document.addEventListener('click', function(e) {
+    var dd = document.getElementById('globalFilterDropdown');
+    if (dd && dd.classList.contains('show') && !dd.contains(e.target)) {
+        closeGlobalDropdown();
     }
 });
 
@@ -1034,5 +1080,16 @@ function descargarExcel(solosCriticos) {
     }, 100);
 }
 </script>
+
+<!-- DROPDOWN DE FILTRO GLOBAL -->
+<div id="globalFilterDropdown" onclick="event.stopPropagation()">
+    <input id="gfd-search" type="text" placeholder="Buscar..." oninput="gfdBuscar(this.value)">
+    <div id="gfd-list"></div>
+    <div id="gfd-actions">
+        <button class="col-filter-apply" onclick="applyColFilter()">Aplicar</button>
+        <button class="col-filter-clear" onclick="clearColFilter()">Limpiar</button>
+    </div>
+</div>
+
 </body>
 </html>
