@@ -104,7 +104,7 @@
         .th-sort-icon { font-size:0.6rem; opacity:0.45; flex-shrink:0; }
         .th-sort.sorted-asc .th-sort-icon,
         .th-sort.sorted-desc .th-sort-icon { opacity:1; }
-        .th-filter-btn-wrap { display:flex; align-items:center; border-left:1px solid #2A2A2A; }
+        /* th-filter-btn-wrap eliminado — el botón va directo en th-inner */
         tbody tr { border-bottom:1px solid #1E1E1E; }
         tbody tr:hover { background:rgba(200,16,46,0.05); }
         tbody tr:nth-child(even) { background:#161616; }
@@ -137,21 +137,74 @@
         .error-box { background:rgba(200,16,46,0.1); border:1px solid #C8102E; border-radius:8px; padding:12px 16px; color:#ff6b6b; font-size:0.85rem; margin-bottom:16px; display:none; text-align:center; }
 
         /* FILTROS DE COLUMNA */
-        .col-filter-btn { background:transparent; border:none; color:#777; cursor:pointer; font-size:0.7rem; padding:6px 7px; transition:color 0.2s; line-height:1; }
-        .col-filter-btn:hover { color:#C8102E; }
-        .col-filter-btn.active { color:#C8102E; }
-        .col-filter-dropdown { display:none; position:absolute; top:100%; left:0; background:#1A1A1A; border:1px solid #C8102E; border-radius:6px; z-index:1000; min-width:180px; max-height:240px; overflow-y:auto; box-shadow:0 4px 16px rgba(0,0,0,0.6); }
-        .col-filter-dropdown.show { display:block; }
-        .col-filter-search { width:100%; padding:8px 10px; background:#111; border:none; border-bottom:1px solid #333; color:#FFF; font-size:0.78rem; outline:none; }
-        .col-filter-item { padding:7px 12px; cursor:pointer; font-size:0.78rem; color:#CCC; display:flex; align-items:center; gap:8px; transition:background 0.1s; white-space:nowrap; }
-        .col-filter-item:hover { background:rgba(200,16,46,0.15); color:#FFF; }
-        .col-filter-item input[type=checkbox] { accent-color:#C8102E; cursor:pointer; }
-        .col-filter-actions { padding:8px 10px; border-top:1px solid #333; display:flex; gap:8px; }
+        /* El botón ▼ se integra directo en th-inner sin wrapper extra */
+        .col-filter-btn {
+            background: transparent;
+            border: none;
+            border-left: 1px solid #2A2A2A;
+            color: #555;
+            cursor: pointer;
+            font-size: 0.65rem;
+            padding: 0 7px;
+            height: 100%;
+            transition: color 0.15s, background 0.15s;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .col-filter-btn:hover { color:#C8102E; background:rgba(200,16,46,0.08); }
+        .col-filter-btn.active { color:#C8102E; background:rgba(200,16,46,0.12); }
+        .col-filter-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #1A1A1A;
+            border: 1px solid #C8102E;
+            border-radius: 6px;
+            z-index: 2000;
+            min-width: 200px;
+            max-height: 260px;
+            overflow: hidden;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.7);
+        }
+        .col-filter-dropdown.show { display: flex; flex-direction: column; }
+        .col-filter-search {
+            width: 100%;
+            padding: 8px 10px;
+            background: #111;
+            border: none;
+            border-bottom: 1px solid #333;
+            color: #FFF;
+            font-size: 0.78rem;
+            outline: none;
+            flex-shrink: 0;
+        }
+        .col-filter-list { overflow-y: auto; max-height: 160px; flex: 1; }
+        .col-filter-item {
+            padding: 7px 12px;
+            cursor: pointer;
+            font-size: 0.78rem;
+            color: #CCC;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.1s;
+            white-space: nowrap;
+        }
+        .col-filter-item:hover { background: rgba(200,16,46,0.15); color:#FFF; }
+        .col-filter-item input[type=checkbox] { accent-color:#C8102E; cursor:pointer; flex-shrink:0; }
+        .col-filter-actions {
+            padding: 8px 10px;
+            border-top: 1px solid #333;
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
         .col-filter-apply { flex:1; padding:6px; background:#C8102E; color:#FFF; border:none; border-radius:4px; font-size:0.75rem; font-weight:700; cursor:pointer; text-transform:uppercase; letter-spacing:1px; }
-        .col-filter-clear { flex:1; padding:6px; background:#333; color:#CCC; border:none; border-radius:4px; font-size:0.75rem; cursor:pointer; text-transform:uppercase; letter-spacing:1px; }
+        .col-filter-clear  { flex:1; padding:6px; background:#333; color:#CCC; border:none; border-radius:4px; font-size:0.75rem; cursor:pointer; text-transform:uppercase; letter-spacing:1px; }
         .col-filter-apply:hover { background:#a50d25; }
-        .col-filter-clear:hover { background:#444; }
-        th { position:relative; }
+        .col-filter-clear:hover  { background:#444; }
+        th { position: relative; }
     </style>
 </head>
 <body>
@@ -748,28 +801,27 @@ function initHeaders() {
         const isSortedThis = sortCol === col.key;
         const sortClass = isSortedThis ? (sortDir === 1 ? 'sorted-asc' : 'sorted-desc') : '';
         const sortArrow = isSortedThis ? (sortDir === 1 ? ' ▲' : ' ▼') : ' ⇅';
+        // safe key para IDs (sin caracteres especiales)
+        const safeKey  = col.key.replace(/[^a-zA-Z0-9]/g,'_');
+        // escaped key para strings JS dentro de onclick (apostrofes escapados)
+        const eKey = col.key.replace(/'/g,"\'");
 
         const th = document.createElement('th');
-        th.innerHTML = `
-            <div class="th-inner">
-                <div class="th-sort ${sortClass}" onclick="handleSort('${col.key.replace(/'/g,"\\'")}')" title="Ordenar por ${col.label}">
-                    ${col.label}<span class="th-sort-icon">${sortArrow}</span>
-                </div>
-                <div class="th-filter-btn-wrap">
-                    <button class="col-filter-btn ${isFiltered ? 'active' : ''}"
-                            onclick="toggleDropdown(event, '${col.key}')"
-                            title="Filtrar">▼</button>
-                </div>
-            </div>
-            <div class="col-filter-dropdown" id="drop_${col.key.replace(/[^a-zA-Z0-9]/g,'_')}">
-                <input class="col-filter-search" type="text" placeholder="Buscar..."
-                       oninput="filterDropdownItems(this, '${col.key.replace(/[^a-zA-Z0-9]/g,'_')}')">
-                <div id="items_${col.key.replace(/[^a-zA-Z0-9]/g,'_')}"></div>
-                <div class="col-filter-actions">
-                    <button class="col-filter-apply" onclick="applyColFilter('${col.key}')">Aplicar</button>
-                    <button class="col-filter-clear" onclick="clearColFilter('${col.key}')">Limpiar</button>
-                </div>
-            </div>`;
+        th.innerHTML =
+            '<div class="th-inner">' +
+              '<div class="th-sort ' + sortClass + '" onclick="handleSort(\'' + eKey + '\')" title="Ordenar por ' + col.label + '">' +
+                col.label + '<span class="th-sort-icon">' + sortArrow + '</span>' +
+              '</div>' +
+              '<button class="col-filter-btn ' + (isFiltered ? 'active' : '') + '" onclick="toggleDropdown(event,\'' + eKey + '\')" title="Filtrar">▼</button>' +
+            '</div>' +
+            '<div class="col-filter-dropdown" id="drop_' + safeKey + '">' +
+              '<input class="col-filter-search" type="text" placeholder="Buscar..." oninput="filterDropdownItems(this,\'' + safeKey + '\')">' +
+              '<div class="col-filter-list" id="items_' + safeKey + '"></div>' +
+              '<div class="col-filter-actions">' +
+                '<button class="col-filter-apply" onclick="applyColFilter(\'' + eKey + '\')">Aplicar</button>' +
+                '<button class="col-filter-clear" onclick="clearColFilter(\'' + eKey + '\')">Limpiar</button>' +
+              '</div>' +
+            '</div>';
         tr.appendChild(th);
     });
 }
@@ -817,7 +869,7 @@ function toggleDropdown(e, colKey) {
 
 function filterDropdownItems(input, safeKey) {
     const q = input.value.toLowerCase();
-    const items = document.querySelectorAll('#items_' + safeKey + ' .col-filter-item');
+    const items = document.querySelectorAll('#items_' + safeKey + ' label.col-filter-item');
     items.forEach(item => {
         item.style.display = item.textContent.toLowerCase().includes(q) ? '' : 'none';
     });
@@ -831,8 +883,7 @@ function applyColFilter(colKey) {
     } else {
         colFilters[colKey] = new Set([...checkboxes].map(cb => cb.value));
     }
-    const drop = document.getElementById('drop_' + safeKey);
-    drop.classList.remove('show');
+    // Cerrar dropdown ANTES de initHeaders (que destruye el DOM del dropdown)
     openDropdown = null;
     filtrar();
     initHeaders();
@@ -841,9 +892,7 @@ function applyColFilter(colKey) {
 
 function clearColFilter(colKey) {
     delete colFilters[colKey];
-    const safeKey = colKey.replace(/[^a-zA-Z0-9]/g,'_');
-    const drop = document.getElementById('drop_' + safeKey);
-    drop.classList.remove('show');
+    // Cerrar dropdown ANTES de initHeaders (que destruye el DOM del dropdown)
     openDropdown = null;
     filtrar();
     initHeaders();
